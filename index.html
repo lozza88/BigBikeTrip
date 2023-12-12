@@ -6,93 +6,9 @@
         <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
         <meta name="mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-capable" content="yes">
-        <link rel="stylesheet" href="./resources/ol.css">
-        <link rel="stylesheet" href="resources/fontawesome-all.min.css">
-        <link rel="stylesheet" href="./resources/ol-layerswitcher.css">
-        <link rel="stylesheet" href="./resources/qgis2web.css">
-<style>
-.search-layer {
-  top: 135px;
-  left: .5em;
-}
-.ol-touch .search-layer {
-  top: 180px;
-}
-</style>
-        <style>
-        html, body {
-            background-color: #ffffff;
-        }
-        .ol-control button {
-            background-color: #f8f8f8 !important;
-            color: #000000 !important;
-            border-radius: 0px !important;
-        }
-        .ol-zoom, .geolocate, .gcd-gl-control .ol-control {
-            background-color: rgba(255,255,255,.4) !important;
-            padding: 3px !important;
-        }
-        .ol-scale-line {
-            background: none !important;
-        }
-        .ol-scale-line-inner {
-            border: 2px solid #f8f8f8 !important;
-            border-top: none !important;
-            background: rgba(255, 255, 255, 0.5) !important;
-            color: black !important;
-        }
-        </style>
-
-        <style>
-        .geolocate {
-            top: 65px;
-            left: .5em;
-        }
-        .ol-touch .geolocate {
-            top: 80px;
-        }
-        </style>
-<style>
-.tooltip {
-  position: relative;
-  background: rgba(0, 0, 0, 0.5);
-  border-radius: 4px;
-  color: white;
-  padding: 4px 8px;
-  opacity: 0.7;
-  white-space: nowrap;
-}
-.tooltip-measure {
-  opacity: 1;
-  font-weight: bold;
-}
-.tooltip-static {
-  background-color: #ffcc33;
-  color: black;
-  border: 1px solid white;
-}
-.tooltip-measure:before,
-.tooltip-static:before {
-  border-top: 6px solid rgba(0, 0, 0, 0.5);
-  border-right: 6px solid transparent;
-  border-left: 6px solid transparent;
-  content: "";
-  position: absolute;
-  bottom: -6px;
-  margin-left: -7px;
-  left: 50%;
-}
-.tooltip-static:before {
-  border-top-color: #ffcc33;
-}
-.measure-control {
-  top: 100px;
-  left: .5em;
-}
-.ol-touch .measure-control {
-  top: 130px;
-}
-</style>
+        <link rel="stylesheet" href="css/leaflet.css"><link rel="stylesheet" href="css/L.Control.Locate.min.css">
+        <link rel="stylesheet" href="css/qgis2web.css"><link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/leaflet-measure.css">
         <style>
         #map {
             width: 1184px;
@@ -103,20 +19,622 @@
     </head>
     <body>
         <div id="map">
-            <div id="popup" class="ol-popup">
-                <a href="#" id="popup-closer" class="ol-popup-closer"></a>
-                <div id="popup-content"></div>
-            </div>
         </div>
-        <script src="resources/qgis2web_expressions.js"></script>
-        <script src="resources/polyfills.js"></script>
-        <script src="./resources/functions.js"></script>
-        <script src="./resources/ol.js"></script>
-        <script src="./resources/ol-layerswitcher.js"></script>
-        <script src="layers/2019cycleroute_fixed_1.js"></script><script src="layers/2019overnights_2.js"></script><script src="layers/2020cycleroutes_fixed_3.js"></script><script src="layers/2020overnights_4.js"></script>
-        <script src="styles/2019cycleroute_fixed_1_style.js"></script><script src="styles/2019overnights_2_style.js"></script><script src="styles/2020cycleroutes_fixed_3_style.js"></script><script src="styles/2020overnights_4_style.js"></script>
-        <script src="./layers/layers.js" type="text/javascript"></script> 
-        <script src="./resources/Autolinker.min.js"></script>
-        <script src="./resources/qgis2web.js"></script>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script><script src="js/L.Control.Locate.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/leaflet-measure.js"></script>
+        <script src="data/2019cycleroute_fixed_1.js"></script>
+        <script src="data/2019overnights_2.js"></script>
+        <script src="data/2020cycleroutes_fixed_3.js"></script>
+        <script src="data/2020overnights_4.js"></script>
+        <script>
+        var highlightLayer;
+        function highlightFeature(e) {
+            highlightLayer = e.target;
+
+            if (e.target.feature.geometry.type === 'LineString') {
+              highlightLayer.setStyle({
+                color: '#ffff00',
+              });
+            } else {
+              highlightLayer.setStyle({
+                fillColor: '#ffff00',
+                fillOpacity: 1
+              });
+            }
+            highlightLayer.openPopup();
+        }
+        var map = L.map('map', {
+            zoomControl:true, maxZoom:28, minZoom:1
+        }).fitBounds([[35.82492664337791,-1.594856018267697],[55.29119910494398,48.64964318172532]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        L.control.locate({locateOptions: {maxZoom: 19}}).addTo(map);
+        var measureControl = new L.Control.Measure({
+            position: 'topleft',
+            primaryLengthUnit: 'meters',
+            secondaryLengthUnit: 'kilometers',
+            primaryAreaUnit: 'sqmeters',
+            secondaryAreaUnit: 'hectares'
+        });
+        measureControl.addTo(map);
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .innerHTML = '';
+        document.getElementsByClassName('leaflet-control-measure-toggle')[0]
+        .className += ' fas fa-ruler';
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_GoogleRoad_0');
+        map.getPane('pane_GoogleRoad_0').style.zIndex = 400;
+        var layer_GoogleRoad_0 = L.tileLayer('https://mt1.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleRoad_0',
+            opacity: 1.0,
+            attribution: '<a href="https://www.google.at/permissions/geoguidelines/attr-guide.html">Map data ©2015 Google</a>',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 20
+        });
+        layer_GoogleRoad_0;
+        map.addLayer(layer_GoogleRoad_0);
+        function pop_2019cycleroute_fixed_1(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Name'] !== null ? autolinker.link(feature.properties['Name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">date</th>\
+                        <td>' + (feature.properties['date'] !== null ? autolinker.link(feature.properties['date'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">distance_</th>\
+                        <td>' + (feature.properties['distance_'] !== null ? autolinker.link(feature.properties['distance_'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">duration</th>\
+                        <td>' + (feature.properties['duration'] !== null ? autolinker.link(feature.properties['duration'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">av speed_k</th>\
+                        <td>' + (feature.properties['av speed_k'] !== null ? autolinker.link(feature.properties['av speed_k'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">min elevat</th>\
+                        <td>' + (feature.properties['min elevat'] !== null ? autolinker.link(feature.properties['min elevat'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">max elevat</th>\
+                        <td>' + (feature.properties['max elevat'] !== null ? autolinker.link(feature.properties['max elevat'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_2019cycleroute_fixed_1_0() {
+            return {
+                pane: 'pane_2019cycleroute_fixed_1',
+                opacity: 1,
+                color: 'rgba(255,127,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+        }
+        map.createPane('pane_2019cycleroute_fixed_1');
+        map.getPane('pane_2019cycleroute_fixed_1').style.zIndex = 401;
+        map.getPane('pane_2019cycleroute_fixed_1').style['mix-blend-mode'] = 'normal';
+        var layer_2019cycleroute_fixed_1 = new L.geoJson(json_2019cycleroute_fixed_1, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_2019cycleroute_fixed_1',
+            layerName: 'layer_2019cycleroute_fixed_1',
+            pane: 'pane_2019cycleroute_fixed_1',
+            onEachFeature: pop_2019cycleroute_fixed_1,
+            style: style_2019cycleroute_fixed_1_0,
+        });
+        bounds_group.addLayer(layer_2019cycleroute_fixed_1);
+        map.addLayer(layer_2019cycleroute_fixed_1);
+        function pop_2019overnights_2(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Name</th>\
+                        <td>' + (feature.properties['Name'] !== null ? autolinker.link(feature.properties['Name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">descriptio</th>\
+                        <td>' + (feature.properties['descriptio'] !== null ? autolinker.link(feature.properties['descriptio'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_2019overnights_2_0(feature) {
+            switch(String(feature.properties['Name'])) {
+                case 'Camping':
+                    return {
+                pane: 'pane_2019overnights_2',
+                shape: 'triangle',
+                radius: 7.199999999999999,
+                opacity: 1,
+                color: 'rgba(61,128,53,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(84,176,74,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Hosted':
+                    return {
+                pane: 'pane_2019overnights_2',
+                radius: 5.6,
+                opacity: 1,
+                color: 'rgba(179,92,21,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(247,128,30,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Hostel':
+                    return {
+                pane: 'pane_2019overnights_2',
+                shape: 'diamond',
+                radius: 6.4,
+                opacity: 1,
+                color: 'rgba(128,17,25,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,30,42,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Workaway':
+                    return {
+                pane: 'pane_2019overnights_2',
+                radius: 6.799999999999999,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,255,1.0)',
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_2019overnights_2',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(124,175,104,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_2019overnights_2');
+        map.getPane('pane_2019overnights_2').style.zIndex = 402;
+        map.getPane('pane_2019overnights_2').style['mix-blend-mode'] = 'normal';
+        var layer_2019overnights_2 = new L.geoJson(json_2019overnights_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_2019overnights_2',
+            layerName: 'layer_2019overnights_2',
+            pane: 'pane_2019overnights_2',
+            onEachFeature: pop_2019overnights_2,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_2019overnights_2_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_2019overnights_2);
+        map.addLayer(layer_2019overnights_2);
+        function pop_2020cycleroutes_fixed_3(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['Name'] !== null ? autolinker.link(feature.properties['Name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['strava'] !== null ? autolinker.link(feature.properties['strava'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">date</th>\
+                        <td>' + (feature.properties['date'] !== null ? autolinker.link(feature.properties['date'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">distance_k</th>\
+                        <td>' + (feature.properties['distance_k'] !== null ? autolinker.link(feature.properties['distance_k'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">duration</th>\
+                        <td>' + (feature.properties['duration'] !== null ? autolinker.link(feature.properties['duration'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">av_speed_k</th>\
+                        <td>' + (feature.properties['av_speed_k'] !== null ? autolinker.link(feature.properties['av_speed_k'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">min_elevat</th>\
+                        <td>' + (feature.properties['min_elevat'] !== null ? autolinker.link(feature.properties['min_elevat'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">max_elevat</th>\
+                        <td>' + (feature.properties['max_elevat'] !== null ? autolinker.link(feature.properties['max_elevat'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">total_clim</th>\
+                        <td>' + (feature.properties['total_clim'] !== null ? autolinker.link(feature.properties['total_clim'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">total_desc</th>\
+                        <td>' + (feature.properties['total_desc'] !== null ? autolinker.link(feature.properties['total_desc'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_2020cycleroutes_fixed_3_0(feature) {
+            switch(String(feature.properties['Name'])) {
+                default:
+                    return {
+                pane: 'pane_2020cycleroutes_fixed_3',
+                opacity: 1,
+                color: 'rgba(137,129,129,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'First day back.':
+                    return {
+                pane: 'pane_2020cycleroutes_fixed_3',
+                opacity: 1,
+                color: 'rgba(255,127,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'March 11 2020':
+                    return {
+                pane: 'pane_2020cycleroutes_fixed_3',
+                opacity: 1,
+                color: 'rgba(255,127,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'March 12 2020':
+                    return {
+                pane: 'pane_2020cycleroutes_fixed_3',
+                opacity: 1,
+                color: 'rgba(255,127,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'March 15 2020':
+                    return {
+                pane: 'pane_2020cycleroutes_fixed_3',
+                opacity: 1,
+                color: 'rgba(255,127,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'March 16 2020':
+                    return {
+                pane: 'pane_2020cycleroutes_fixed_3',
+                opacity: 1,
+                color: 'rgba(255,127,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'March 9 2020':
+                    return {
+                pane: 'pane_2020cycleroutes_fixed_3',
+                opacity: 1,
+                color: 'rgba(255,127,0,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+                case 'Taxi':
+                    return {
+                pane: 'pane_2020cycleroutes_fixed_3',
+                opacity: 1,
+                color: 'rgba(137,129,129,1.0)',
+                dashArray: '',
+                lineCap: 'square',
+                lineJoin: 'bevel',
+                weight: 3.0,
+                fillOpacity: 0,
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_2020cycleroutes_fixed_3');
+        map.getPane('pane_2020cycleroutes_fixed_3').style.zIndex = 403;
+        map.getPane('pane_2020cycleroutes_fixed_3').style['mix-blend-mode'] = 'normal';
+        var layer_2020cycleroutes_fixed_3 = new L.geoJson(json_2020cycleroutes_fixed_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_2020cycleroutes_fixed_3',
+            layerName: 'layer_2020cycleroutes_fixed_3',
+            pane: 'pane_2020cycleroutes_fixed_3',
+            onEachFeature: pop_2020cycleroutes_fixed_3,
+            style: style_2020cycleroutes_fixed_3_0,
+        });
+        bounds_group.addLayer(layer_2020cycleroutes_fixed_3);
+        map.addLayer(layer_2020cycleroutes_fixed_3);
+        function pop_2020overnights_4(feature, layer) {
+            layer.on({
+                mouseout: function(e) {
+                    for (i in e.target._eventParents) {
+                        e.target._eventParents[i].resetStyle(e.target);
+                    }
+                    if (typeof layer.closePopup == 'function') {
+                        layer.closePopup();
+                    } else {
+                        layer.eachLayer(function(feature){
+                            feature.closePopup()
+                        });
+                    }
+                },
+                mouseover: highlightFeature,
+            });
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">Name</th>\
+                        <td>' + (feature.properties['Name'] !== null ? autolinker.link(feature.properties['Name'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">descriptio</th>\
+                        <td>' + (feature.properties['descriptio'] !== null ? autolinker.link(feature.properties['descriptio'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            layer.bindPopup(popupContent, {maxHeight: 400});
+        }
+
+        function style_2020overnights_4_0(feature) {
+            switch(String(feature.properties['Name'])) {
+                case 'Camping':
+                    return {
+                pane: 'pane_2020overnights_4',
+                shape: 'triangle',
+                radius: 7.2,
+                opacity: 1,
+                color: 'rgba(61,128,53,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(84,176,74,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Hosted':
+                    return {
+                pane: 'pane_2020overnights_4',
+                radius: 5.6,
+                opacity: 1,
+                color: 'rgba(179,92,21,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(247,128,30,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Hostel':
+                    return {
+                pane: 'pane_2020overnights_4',
+                shape: 'diamond',
+                radius: 6.4,
+                opacity: 1,
+                color: 'rgba(128,17,25,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(219,30,42,1.0)',
+                interactive: true,
+            }
+                    break;
+                case 'Workaway':
+                    return {
+                pane: 'pane_2020overnights_4',
+                radius: 6.8,
+                opacity: 1,
+                color: 'rgba(0,0,0,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 2.0,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(255,255,255,1.0)',
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_2020overnights_4',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(124,175,104,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_2020overnights_4');
+        map.getPane('pane_2020overnights_4').style.zIndex = 404;
+        map.getPane('pane_2020overnights_4').style['mix-blend-mode'] = 'normal';
+        var layer_2020overnights_4 = new L.geoJson(json_2020overnights_4, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_2020overnights_4',
+            layerName: 'layer_2020overnights_4',
+            pane: 'pane_2020overnights_4',
+            onEachFeature: pop_2020overnights_4,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_2020overnights_4_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_2020overnights_4);
+        map.addLayer(layer_2020overnights_4);
+            var title = new L.Control();
+            title.onAdd = function (map) {
+                this._div = L.DomUtil.create('div', 'info');
+                this.update();
+                return this._div;
+            };
+            title.update = function () {
+                this._div.innerHTML = '<h2>London to Tbilisi Solo by Bike</h2>';
+            };
+            title.addTo(map);
+        var baseMaps = {};
+        L.control.layers(baseMaps,{'2020 overnights<br /><table><tr><td style="text-align: center;"><img src="legend/2020overnights_4_Camping0.png" /></td><td>Camping</td></tr><tr><td style="text-align: center;"><img src="legend/2020overnights_4_Hosted1.png" /></td><td>Hosted</td></tr><tr><td style="text-align: center;"><img src="legend/2020overnights_4_Hostel2.png" /></td><td>Hostel</td></tr><tr><td style="text-align: center;"><img src="legend/2020overnights_4_Workaway3.png" /></td><td>Workaway</td></tr><tr><td style="text-align: center;"><img src="legend/2020overnights_4_4.png" /></td><td></td></tr></table>': layer_2020overnights_4,'2020 cycle routes_fixed<br /><table><tr><td style="text-align: center;"><img src="legend/2020cycleroutes_fixed_3_0.png" /></td><td></td></tr><tr><td style="text-align: center;"><img src="legend/2020cycleroutes_fixed_3_Firstdayback1.png" /></td><td>First day back.</td></tr><tr><td style="text-align: center;"><img src="legend/2020cycleroutes_fixed_3_March1120202.png" /></td><td>March 11 2020</td></tr><tr><td style="text-align: center;"><img src="legend/2020cycleroutes_fixed_3_March1220203.png" /></td><td>March 12 2020</td></tr><tr><td style="text-align: center;"><img src="legend/2020cycleroutes_fixed_3_March1520204.png" /></td><td>March 15 2020</td></tr><tr><td style="text-align: center;"><img src="legend/2020cycleroutes_fixed_3_March1620205.png" /></td><td>March 16 2020</td></tr><tr><td style="text-align: center;"><img src="legend/2020cycleroutes_fixed_3_March920206.png" /></td><td>March 9 2020</td></tr><tr><td style="text-align: center;"><img src="legend/2020cycleroutes_fixed_3_Taxi7.png" /></td><td>Taxi</td></tr></table>': layer_2020cycleroutes_fixed_3,'2019 overnights<br /><table><tr><td style="text-align: center;"><img src="legend/2019overnights_2_Camping0.png" /></td><td>Camping</td></tr><tr><td style="text-align: center;"><img src="legend/2019overnights_2_Hosted1.png" /></td><td>Hosted</td></tr><tr><td style="text-align: center;"><img src="legend/2019overnights_2_Hostel2.png" /></td><td>Hostel</td></tr><tr><td style="text-align: center;"><img src="legend/2019overnights_2_Workaway3.png" /></td><td>Workaway</td></tr><tr><td style="text-align: center;"><img src="legend/2019overnights_2_4.png" /></td><td></td></tr></table>': layer_2019overnights_2,'<img src="legend/2019cycleroute_fixed_1.png" /> 2019 cycle route_fixed': layer_2019cycleroute_fixed_1,"Google Road": layer_GoogleRoad_0,}).addTo(map);
+        setBounds();
+        resetLabels([layer_2019cycleroute_fixed_1]);
+        map.on("zoomend", function(){
+            resetLabels([layer_2019cycleroute_fixed_1]);
+        });
+        map.on("layeradd", function(){
+            resetLabels([layer_2019cycleroute_fixed_1]);
+        });
+        map.on("layerremove", function(){
+            resetLabels([layer_2019cycleroute_fixed_1]);
+        });
+        </script>
     </body>
 </html>
